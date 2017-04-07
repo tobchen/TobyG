@@ -10,15 +10,18 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 
+#include "../../include/tobyg_const.h"
+
 #include "gl.h"
 #include "texture.h"
 #include "camera.h"
+
+#define TOBYG_SRC_GFX_GFX_TEX_SIZE 256
 
 static SDL_Window* window = NULL;
 static int windowWidth, windowHeight;
 static SDL_GLContext context = NULL;
 
-static int virtualWidth, virtualHeight;
 static GLuint virtualTexture;
 static GLuint virtualDepth, virtualFrame;
 static GLuint virtualVertexBuffer, virtualIndexBuffer;
@@ -42,13 +45,12 @@ static const char* virtualFragmentSource =
 			"gl_FragColor = texture2D(tex, uv_var);"
 		"}";
 
-static int initVirtualResolution(int width, int height);
+static int initVirtualResolution();
 static void destroyVirtualResolution(void);
 static int initSubSystems(void);
 static void destroySubSystems(void);
 
-int TobyG_StartTobyG(const char* title, int width, int height,
-		int vwidth, int vheight) {
+int TobyG_StartTobyG(const char* title, int width, int height) {
 	if (NULL == title) {
 		title = "Tobchen.de Advertisement";
 	}
@@ -78,7 +80,7 @@ int TobyG_StartTobyG(const char* title, int width, int height,
 	glEnable(GL_CULL_FACE);
 	glClearColor(0, 0, 0, 0.0);
 
-	if (initVirtualResolution(vwidth, vheight)) {
+	if (initVirtualResolution()) {
 		SDL_GL_DeleteContext(context);
 		SDL_DestroyWindow(window);
 		return -1;
@@ -104,91 +106,43 @@ void TobyG_EndTobyG(void) {
 }
 
 void TobyG_StartGraphics() {
-	if (virtualTexture != 0) {
-		glBindFramebuffer(GL_FRAMEBUFFER, virtualFrame);
-		glViewport(0, 0, virtualWidth, virtualHeight);
-	}
+	glBindFramebuffer(GL_FRAMEBUFFER, virtualFrame);
+	glViewport(0, 0, TOBYG_CONST_RES_WIDTH, TOBYG_CONST_RES_HEIGHT);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void TobyG_EndGraphics() {
-	if (virtualTexture != 0) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, windowWidth, windowHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, windowWidth, windowHeight);
 
-		glUseProgram(virtualProgram);
+	glUseProgram(virtualProgram);
 
-		glBindTexture(GL_TEXTURE_2D, virtualTexture);
-		glUniform1i(virtualUniformTexture, 0);
+	glBindTexture(GL_TEXTURE_2D, virtualTexture);
+	glUniform1i(virtualUniformTexture, 0);
 
-		glEnableVertexAttribArray(virtualAttribXYZ);
-		glEnableVertexAttribArray(virtualAttribUV);
+	glEnableVertexAttribArray(virtualAttribXYZ);
+	glEnableVertexAttribArray(virtualAttribUV);
 
-		glBindBuffer(GL_ARRAY_BUFFER, virtualVertexBuffer);
-		glVertexAttribPointer(virtualAttribUV, 2, GL_FLOAT, GL_FALSE, 0, 0);
-		glVertexAttribPointer(virtualAttribXYZ, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*) (sizeof(GLfloat) * 8));
+	glBindBuffer(GL_ARRAY_BUFFER, virtualVertexBuffer);
+	glVertexAttribPointer(virtualAttribUV, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(virtualAttribXYZ, 3, GL_FLOAT, GL_FALSE, 0,
+			(GLvoid*) (sizeof(GLfloat) * 8));
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, virtualIndexBuffer);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, virtualIndexBuffer);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-		glDisableVertexAttribArray(virtualAttribUV);
-		glDisableVertexAttribArray(virtualAttribXYZ);
-	}
+	glDisableVertexAttribArray(virtualAttribUV);
+	glDisableVertexAttribArray(virtualAttribXYZ);
 
 	SDL_GL_SwapWindow(window);
 }
 
-int TobyG_GetResolution(int* width, int* height) {
-	if (NULL == window) {
-		return -1;
-	}
-
-	if (0 == virtualTexture) {
-		*width = windowWidth;
-		*height = windowHeight;
-	} else {
-		*width = virtualWidth;
-		*height = virtualHeight;
-	}
-
-	return 0;
-}
-
-int initVirtualResolution(int width, int height) {
-	int texSize;
-	GLfloat maxu, maxv;
+int initVirtualResolution() {
 	GLfloat x, y;
 	GLfloat vertexData[20];
 	GLushort indexData[6];
 	GLuint vertexShader, fragmentShader;
-
-	if (width <= 0 || height <= 0) {
-		return 0;
-	}
-	virtualWidth = width;
-	virtualHeight = height;
-
-	/* Calculate details */
-	texSize = 1;
-	while (texSize < width || texSize < height) {
-		texSize <<= 1;
-	}
-	maxu = (GLfloat) width / texSize;
-	maxv = (GLfloat) height / texSize;
-	x = 1.0f;
-	y = 1.0f / width * height;
-	if (height > width) {
-		x = 1.0f / width * height;
-		y = 1.0f;
-	}
-	x = windowWidth;
-	y = (GLfloat) height * (GLfloat) windowWidth / (GLfloat) width;
-	if (y > windowHeight) {
-		x = (GLfloat) width * (GLfloat) windowHeight / (GLfloat) height;
-		y = windowHeight;
-	}
-	x /= windowWidth; y /= windowHeight;
 
 	/* Shader */
 	vertexShader = _TobyG_CreateShader(-5, virtualVertexSource, GL_VERTEX_SHADER);
@@ -220,8 +174,9 @@ int initVirtualResolution(int width, int height) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texSize, texSize, 0,
-			GL_RGB, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+			TOBYG_SRC_GFX_GFX_TEX_SIZE, TOBYG_SRC_GFX_GFX_TEX_SIZE,
+			0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
 	/* Depth buffer */
 	glGenRenderbuffers(1, &virtualDepth);
@@ -229,7 +184,8 @@ int initVirtualResolution(int width, int height) {
 		goto free_texture;
 	}
 	glBindRenderbuffer(GL_RENDERBUFFER, virtualDepth);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texSize, texSize);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+			TOBYG_SRC_GFX_GFX_TEX_SIZE, TOBYG_SRC_GFX_GFX_TEX_SIZE);
 	/*glBindRenderbuffer(GL_RENDERBUFFER, 0);*/
 
 	/* Frame buffer */
@@ -249,9 +205,15 @@ int initVirtualResolution(int width, int height) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Quad */
-	vertexData[0] = 0.0f; vertexData[1] = maxv;
-	vertexData[2] = maxu; vertexData[3] = maxv;
-	vertexData[4] = maxu; vertexData[5] = 0.0f;
+	x = 1.0f;
+	y = ((float) windowWidth / TOBYG_CONST_RES_WIDTH * TOBYG_CONST_RES_HEIGHT) / windowHeight;
+	if (y > x) {
+		x = ((float) windowHeight / TOBYG_CONST_RES_HEIGHT * TOBYG_CONST_RES_WIDTH) / windowWidth;
+		y = 1.0f;
+	}
+	vertexData[0] = 0.0f; vertexData[1] = 0.875f;
+	vertexData[2] = 1.0f; vertexData[3] = 0.875f;
+	vertexData[4] = 1.0f; vertexData[5] = 0.0f;
 	vertexData[6] = 0.0f; vertexData[7] = 0.0f;
 	vertexData[8] = -x; vertexData[9] = y; vertexData[10] = 0.0f;
 	vertexData[11] = x; vertexData[12] = y; vertexData[13] = 0.0f;

@@ -9,6 +9,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "../../include/tobyg_const.h"
+
 #include "math.h"
 #include "gfx.h"
 #include "renderer.h"
@@ -32,11 +34,9 @@ GLfloat viewProjMatrix[16];
 SDL_bool viewProjUpdated;
 
 int TobyG_SetCameraPerspective(double fov, GLfloat near, GLfloat far) {
-	int width, height;
-
-	TobyG_GetResolution(&width, &height);
-	TobyG_SetMat4Perspective(fov, (GLfloat) width / (GLfloat) height, near, far,
-			projMatrix);
+	TobyG_SetMat4Perspective(fov,
+			(GLfloat) TOBYG_CONST_RES_WIDTH / (GLfloat) TOBYG_CONST_RES_HEIGHT,
+			near, far, projMatrix);
 	viewProjUpdated = SDL_FALSE;
 
 	return 0;

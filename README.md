@@ -18,7 +18,7 @@ The smallest TobyG program would be:
 
 	int main(void) {
 		SDL_Init(SDL_INIT_EVERYTHING);
-		TobyG_StartTobyG("TobyG", 640, 480, 256, 224);
+		TobyG_StartTobyG("TobyG", 640, 480);
 
 		/* Game stuff! */
 
@@ -28,11 +28,11 @@ The smallest TobyG program would be:
 		return EXIT_SUCCESS;
 	}
 
-This initializes SDL2 (always initialize SDL2 first). Then opens a 640x480 window with a "TobyG" title and a 256x224 virtual resolution. Finally it closes the window and quits SDL2.
+This initializes SDL2 (always initialize SDL2 first). Then opens a 640x480 window with a "TobyG" title. Finally it closes the window and quits SDL2.
 
-Setting a virtual resolution lower than window size will upscale all game graphics keeping the aspect ratio. A virtual resolution isn't required - set virtual width or height to -1 to render the game in window resolution.
+Note that although the window resolution's 640x480 the actual resolution of a TobyG game will always be 256x224.
 
-Every TobyG function that `Start`s something has a corresponding function that `End`s it. When nesting these types of functions please take care to reverse call the `End` functions.
+Every TobyG function that `Start`s something has a corresponding function that `End`s it. When nesting these types of functions please make sure to reverse call the `End` functions.
 
 ### Game Management
 
@@ -40,7 +40,7 @@ Letting TobyG manage the game is entirely optional but might be helpful. TobyG t
 
 Game management is initialized with `TobyG_StartGameMgr()` (and destroyed with `TobyG_EndGameMgr()`).
 
-Game states are then added using `TobyG_AddGameMgrState(id, start, stop, loop)` with id being a unique state id  and start, stop and loop being functions for the game manager to call when starting the state, stopping the state (on quit or switch) and in every main loop pass.
+Game states are then added using `TobyG_AddGameMgrState(id, start, stop, loop)` with `id` being a unique state id  and `start`, `stop` and `loop` being functions for the game manager to call when starting the state, stopping the state (on quit or switch) and in every main loop pass.
 
 Use `TobyG_RunGameMgr(id)` to start the main loop with a specific state and call `TobyG_QuitGameMgr()` (in a state) to quit the main loop. `TobyG_ChangeGameMgrState(id)` will stop the current state and start another one.
 
@@ -50,7 +50,7 @@ Start the graphics block in a main loop pass with `TobyG_StartGraphics()` and en
 
 The 3D coordinate system is right handed with X going positively to the right.
 
-All angles are handled in radiant unless otherwise noted.
+All angles in radiant unless otherwise noted.
 
 #### Camera
 
@@ -84,15 +84,15 @@ Mesh batches are a bundle of meshes accessed by index. They are read from T3D Me
 
 Mesh batches need a mesh batch renderer created with `TobyG_CreateRetroMeshBatchRenderer()` (for now only a retro style renderer exists) and later destroyed with `TobyG_FreeMeshBatchRenderer()`. Do *not* nest renderers.
 
-Read a mesh batch with `TobyG_ReadMeshBatch(path)` and later free it with `TobyG_FreeMeshBatch(mesh batch)`. Find indices of meshes by name using `TobyG_GetMeshBatchIndex(mesh batch, name)`.
+Read a mesh batch with `TobyG_ReadMeshBatch(path)` and later free it with `TobyG_FreeMeshBatch(batch)`. Find indices of meshes by name using `TobyG_GetMeshBatchIndex(batch, name)`.
 
-For rendering in the graphics block start the mesh batch renderer using `TobyG_StartMeshBatchRenderer(renderer)` to then set the mesh batch with `TobyG_SetMeshBatch(mesh batch)` and draw instances by calling `TobyG_DrawMeshBatchAt(instance, index)` and finally stop mesh batch rendering with `TobyG_EndMeshBatchRenderer()`.
+For rendering in the graphics block start the mesh batch renderer using `TobyG_StartMeshBatchRenderer(renderer)` to then set the mesh batch with `TobyG_SetMeshBatch(batch)` and draw instances by calling `TobyG_DrawMeshBatchAt(instance, index)` and finally stop mesh batch rendering with `TobyG_EndMeshBatchRenderer()`.
 
 #### Full Example
 
 In this example we load two animated meshes and one mesh batch and render the two animated meshes at two positions each and render two meshes out of the mesh batch at the same position. Animated meshes and mesh batch have different textures each.
 
-So we need: Five instances, two animated meshes, one mesh batch, three textures, one animated mesh renderer, one mesh batch renderer. Just for fun, we also set the camera. SDL2 is already initialized, a TobyG window is already opened.
+So we need: Five instances, two animated meshes, one mesh batch, three textures, one animated mesh renderer, one mesh batch renderer. Just for fun, we also set the camera. SDL2 is already initialized, a TobyG window is already open.
 
 	TobyG_MeshRenderer* meshRenderer = TobyG_CreateRetroMeshRenderer();
 	TobyG_MeshBatchRenderer* batchRenderer = TobyG_CreateRetroMeshBatchRenderer();
@@ -212,4 +212,8 @@ Oh my, I have no idea where to begin, but most likely:
 
 ### Version 0.1
 
-TobyG went public! 3D rendering possible, nothing else.
+- TobyG went public
+
+### Version 0.2
+
+- Virtual resolution now mandatory, always set to 256x224
