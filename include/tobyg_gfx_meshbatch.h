@@ -13,6 +13,16 @@
 typedef struct tobyg_mesh_batch TobyG_MeshBatch;
 
 /*!
+ * \brief Start a mesh batch rendering section.
+ */
+void TobyG_StartMeshBatchRendering(void);
+
+/*!
+ * End a mesh batch rendering section.
+ */
+void TobyG_EndMeshBatchRendering(void);
+
+/*!
  * \brief Read a T3D mesh batch.
  * @param path path to mesh batch
  * @return mesh batch

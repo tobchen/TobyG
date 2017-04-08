@@ -72,21 +72,17 @@ Instances are created using `TobyG_CreateInstance()` and later freed with `TobyG
 
 Animated meshes are read from T3D Animated Meshes (see [T3D](https://github.com/tobchen/T3D#t3d-animated-meshes-t3d)). They use vertex morphing for animation so using high vertex counts is not recommended. For non-animated meshes see Mesh Batches which are optimized for memory usage and draw call count.
 
-Animated meshes need a mesh renderer created with `TobyG_CreateRetroMeshRenderer()` (for now only a retro style renderer exists) and later destroyed with `TobyG_FreeMeshRenderer(renderer)`. Do *not* nest renderers.
-
 Read a mesh with `TobyG_ReadMesh(path)` and later free it with `TobyG_FreeMesh`.
 
-For rendering in the graphics block start the mesh renderer using `TobyG_StartMeshRenderer(renderer)` to then set the mesh with `TobyG_SetMesh(mesh)` and draw instances by calling `TobyG_DrawMeshAt(instance, frame)` and finally stop mesh rendering with `TobyG_EndMeshRenderer()`.
+For rendering in the graphics block start the mesh renderer using `TobyG_StartMeshRendering()` to then set the mesh with `TobyG_SetMesh(mesh)` and draw instances by calling `TobyG_DrawMeshAt(instance, frame)` and finally stop mesh rendering with `TobyG_EndMeshRendering()`.
 
 #### Mesh Batches
 
 Mesh batches are a bundle of meshes accessed by index. They are read from T3D Mesh Batches (see [T3D](https://github.com/tobchen/T3D#t3d-mesh-batches-t3db)).
 
-Mesh batches need a mesh batch renderer created with `TobyG_CreateRetroMeshBatchRenderer()` (for now only a retro style renderer exists) and later destroyed with `TobyG_FreeMeshBatchRenderer()`. Do *not* nest renderers.
-
 Read a mesh batch with `TobyG_ReadMeshBatch(path)` and later free it with `TobyG_FreeMeshBatch(batch)`. Find indices of meshes by name using `TobyG_GetMeshBatchIndex(batch, name)`.
 
-For rendering in the graphics block start the mesh batch renderer using `TobyG_StartMeshBatchRenderer(renderer)` to then set the mesh batch with `TobyG_SetMeshBatch(batch)` and draw instances by calling `TobyG_DrawMeshBatchAt(instance, index)` and finally stop mesh batch rendering with `TobyG_EndMeshBatchRenderer()`.
+For rendering in the graphics block start the mesh batch renderer using `TobyG_StartMeshBatchRenderering()` to then set the mesh batch with `TobyG_SetMeshBatch(batch)` and draw instances by calling `TobyG_DrawMeshBatchAt(instance, index)` and finally stop mesh batch rendering with `TobyG_EndMeshBatchRendering()`.
 
 #### Full Example
 
@@ -94,9 +90,6 @@ In this example we load two animated meshes and one mesh batch and render the tw
 
 So we need: Five instances, two animated meshes, one mesh batch, three textures, one animated mesh renderer, one mesh batch renderer. Just for fun, we also set the camera. SDL2 is already initialized, a TobyG window is already open.
 
-	TobyG_MeshRenderer* meshRenderer = TobyG_CreateRetroMeshRenderer();
-	TobyG_MeshBatchRenderer* batchRenderer = TobyG_CreateRetroMeshBatchRenderer();
-	
 	TobyG_Mesh* mesh1 = TobyG_ReadMesh("mesh1.t3d");
 	TobyG_Mesh* mesh2 = TobyG_ReadMesh("mesh2.t3d");
 	
@@ -126,7 +119,7 @@ So we need: Five instances, two animated meshes, one mesh batch, three textures,
 	for (;;) {
 		TobyG_StartGraphics();
 		
-		TobyG_StartMeshRenderer(meshRenderer);
+		TobyG_StartMeshRendering();
 		TobyG_SetTexture(tex1);
 		TobyG_SetMesh(mesh1);
 		TobyG_DrawMeshAt(inst1_1, 1.0);
@@ -135,14 +128,14 @@ So we need: Five instances, two animated meshes, one mesh batch, three textures,
 		TobyG_SetMesh(mesh2);
 		TobyG_DrawMeshAt(inst2_1, 4.0);
 		TobyG_DrawMeshAt(inst2_2, 17.0);
-		TobyG_EndMeshRenderer();
+		TobyG_EndMeshRendering();
 		
-		TobyG_StartMeshBatchRenderer(batchRenderer);
+		TobyG_StartMeshBatchRendering();
 		TobyG_SetTexture(tex3);
 		TobyG_SetMeshBatch(batch);
 		TobyG_DrawMeshBatchAt(inst3, index1);
 		TobyG_DrawMeshBatchAt(inst3, index2);
-		TobyG_EndMeshBatchRenderer();
+		TobyG_EndMeshBatchRendering();
 		
 		TobyG_EndGraphics();
 	}
@@ -210,10 +203,14 @@ Oh my, I have no idea where to begin, but most likely:
 
 ## Version History
 
-### Version 0.1
+### v0
+
+#### v0.1
 
 - TobyG went public
 
-### Version 0.2
+#### v0.2
 
 - Virtual resolution now mandatory, always set to 256x224
+- Mesh renderer flexibility removed (only retro rendering now)
+- Mesh batch renderer flexibility removed (only retro rendering now)

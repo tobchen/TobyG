@@ -98,7 +98,7 @@ void TobyG_SetDefaultTexture(void) {
 }
 
 int _TobyG_InitTexture(void) {
-	unsigned char defaultTexPixel[] = {255, 255, 255, 255};
+	unsigned char defaultTexPixel[] = {0xFF, 0xFF, 0xFF, 0xFF};
 
 	defaultTexture = TobyG_CreateTextureRGBA(defaultTexPixel, 1, 1);
 	if (NULL == defaultTexture) {

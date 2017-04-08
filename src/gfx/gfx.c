@@ -15,6 +15,8 @@
 #include "gl.h"
 #include "texture.h"
 #include "camera.h"
+#include "mesh.h"
+#include "meshbatch.h"
 
 #define TOBYG_SRC_GFX_GFX_TEX_SIZE 256
 
@@ -247,16 +249,28 @@ static void destroyVirtualResolution(void) {
 
 static int initSubSystems(void) {
 	if (_TobyG_InitCamera()) {
-		return -1;
+		goto fail_camera;
 	}
 	if (_TobyG_InitTexture()) {
-		_TobyG_DestroyCamera();
-		return -1;
+		goto fail_texture;
+	}
+	if (_TobyG_InitMesh()) {
+		goto fail_mesh;
+	}
+	if (_TobyG_InitMeshBatch()) {
+		goto fail_mesh_batch;
 	}
 	return 0;
+
+	fail_mesh_batch:	_TobyG_DestroyMesh();
+	fail_mesh:			_TobyG_DestroyTexture();
+	fail_texture: 		_TobyG_DestroyCamera();
+	fail_camera:		return -1;
 }
 
 static void destroySubSystems(void) {
-	_TobyG_DestroyCamera();
+	_TobyG_DestroyMeshBatch();
+	_TobyG_DestroyMesh();
 	_TobyG_DestroyTexture();
+	_TobyG_DestroyCamera();
 }

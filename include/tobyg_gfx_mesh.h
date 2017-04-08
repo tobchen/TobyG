@@ -15,6 +15,17 @@
 typedef struct tobyg_mesh TobyG_Mesh;
 
 /*!
+ * \brief Start a mesh rendering section.
+ * @return -1 on error, 0 on success
+ */
+int TobyG_StartMeshRendering(void);
+
+/*!
+ * \brief End a mesh rendering section.
+ */
+void TobyG_EndMeshRendering(void);
+
+/*!
  * \brief Read a T3D animated mesh.
  * @param path path to mesh
  * @return mesh

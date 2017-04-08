@@ -13,7 +13,6 @@
 
 #include "math.h"
 #include "gfx.h"
-#include "renderer.h"
 
 #define TOBYG_SRC_GFX_CAMERA_DEFAULT_FOV 0.7853981633974483
 #define TOBYG_SRC_GFX_CAMERA_DEFAULT_NEAR 0.1f

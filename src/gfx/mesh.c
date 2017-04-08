@@ -9,7 +9,6 @@
 
 #include <SDL2/SDL.h>
 
-#include "renderer.h"
 #include "gl.h"
 #include "instance.h"
 #include "camera.h"
@@ -26,7 +25,91 @@ struct tobyg_mesh {
 	GLuint indexBuffer;
 };
 
-TobyG_Mesh* currentMesh;
+/*
+ * Parts of the shader from https://github.com/keijiro/Retro3D
+ */
+static const char* vertexSrc =
+		"#version 120\n"
+		"uniform mat4 mvp;"
+		"uniform float delta;"
+		"attribute vec3 xyz1;"
+		"attribute vec3 xyz2;"
+		"attribute vec2 uv;"
+		/*"varying vec3 uv_var;"*/
+		"varying vec2 uv_interpol;"
+		"void main() {"
+		    "gl_Position = mvp * vec4(mix(xyz1, xyz2, delta), 1);"
+			/*"uv_var = vec3(uv * gl_Position.w, gl_Position.w);"*/
+			"uv_interpol = uv;"
+		"}";
+static const char* fragmentSrc =
+		"#version 120\n"
+		"uniform sampler2D tex;"
+		/*"varying vec3 uv_var;"*/
+		"varying vec2 uv_interpol;"
+		"void main() {"
+			/*"vec2 uv = uv_var.xy / uv_var.z;"*/
+			/*"gl_FragColor = texture2D(tex, uv);"*/
+			"gl_FragColor = texture2D(tex, uv_interpol);"
+		"}";
+
+static GLuint program;
+static GLint uniformMVP, uniformDelta, uniformTex;
+static GLint attribXYZ1, attribXYZ2, attribUV;
+
+static TobyG_Mesh* currentMesh;
+
+int _TobyG_InitMesh(void) {
+	GLuint vertexShader;
+	GLuint fragmentShader;
+
+	vertexShader = _TobyG_CreateShader(-10, vertexSrc, GL_VERTEX_SHADER);
+	fragmentShader = _TobyG_CreateShader(-11, fragmentSrc, GL_FRAGMENT_SHADER);
+
+	program = _TobyG_CreateProgram(-12, vertexShader, fragmentShader);
+	if (0 == program) {
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
+		return -1;
+	}
+
+	uniformMVP = glGetUniformLocation(program, "mvp");
+	uniformDelta = glGetUniformLocation(program, "delta");
+	uniformTex = glGetUniformLocation(program, "tex");
+	attribXYZ1 = glGetAttribLocation(program, "xyz1");
+	attribXYZ2 = glGetAttribLocation(program, "xyz2");
+	attribUV = glGetAttribLocation(program, "uv");
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	return 0;
+}
+
+void _TobyG_DestroyMesh(void) {
+	glDeleteProgram(program);
+}
+
+int TobyG_StartMeshRendering(void) {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	glUseProgram(program);
+
+	glUniform1i(uniformTex, 0);
+
+	glEnableVertexAttribArray(attribXYZ1);
+	glEnableVertexAttribArray(attribXYZ2);
+	glEnableVertexAttribArray(attribUV);
+
+	return 0;
+}
+
+void TobyG_EndMeshRendering(void) {
+	glDisableVertexAttribArray(attribUV);
+	glDisableVertexAttribArray(attribXYZ2);
+	glDisableVertexAttribArray(attribXYZ1);
+}
 
 TobyG_Mesh* TobyG_ReadMesh(const char* path) {
 	/* TODO Handle zero frameCount */
@@ -119,17 +202,13 @@ int TobyG_SetMesh(TobyG_Mesh* mesh) {
 }
 
 int TobyG_DrawMeshAt(TobyG_Instance* instance, GLfloat time) {
-	GLint uniformMVP, uniformDelta;
-	GLint attribXYZ1, attribXYZ2, attribUV;
 	GLfloat* matrixVP;
 	GLfloat* matrixM;
 	GLfloat matrixMVP[16];
 	GLubyte frame1, frame2;
 	GLfloat delta;
 
-	if (NULL == instance || NULL == currentMesh
-			|| _TobyG_GetCurrentMeshRendererGLSLInfo(&uniformMVP, &uniformDelta,
-					&attribXYZ1, &attribXYZ2, &attribUV)) {
+	if (NULL == instance || NULL == currentMesh) {
 		return -1;
 	}
 

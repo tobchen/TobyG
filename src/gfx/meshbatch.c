@@ -10,7 +10,6 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 
-#include "renderer.h"
 #include "gl.h"
 #include "instance.h"
 #include "camera.h"
@@ -31,7 +30,83 @@ struct tobyg_mesh_batch {
 	TobyG_MeshBatchElement* elements;
 };
 
+/*
+ * Parts of the shader from https://github.com/keijiro/Retro3D
+ */
+static const char* vertexSrc =
+		"#version 120\n"
+		"uniform mat4 mvp;"
+		"attribute vec3 xyz;"
+		"attribute vec2 uv;"
+		/*"varying vec3 uv_var;"*/
+		"varying vec2 uv_interpol;"
+		"void main() {"
+		    "gl_Position = mvp * vec4(xyz, 1);"
+			/*"uv_var = vec3(uv * gl_Position.w, gl_Position.w);"*/
+			"uv_interpol = uv;"
+		"}";
+static const char* fragmentSrc =
+		"#version 120\n"
+		"uniform sampler2D tex;"
+		/*"varying vec3 uv_var;"*/
+		"varying vec2 uv_interpol;"
+		"void main() {"
+			/*"vec2 uv = uv_var.xy / uv_var.z;"*/
+			/*"gl_FragColor = texture2D(tex, uv);"*/
+			"gl_FragColor = texture2D(tex, uv_interpol);"
+		"}";
+
+static GLuint program;
+static GLint uniformMVP, uniformTex;
+static GLint attribXYZ, attribUV;
+
 TobyG_MeshBatch* currentBatch;
+
+int _TobyG_InitMeshBatch(void) {
+	GLuint vertexShader;
+	GLuint fragmentShader;
+
+	vertexShader = _TobyG_CreateShader(-20, vertexSrc, GL_VERTEX_SHADER);
+	fragmentShader = _TobyG_CreateShader(-21, fragmentSrc, GL_FRAGMENT_SHADER);
+
+	program = _TobyG_CreateProgram(-22, vertexShader, fragmentShader);
+	if (0 == program) {
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
+		return -1;
+	}
+
+	uniformMVP = glGetUniformLocation(program, "mvp");
+	uniformTex = glGetUniformLocation(program, "tex");
+	attribXYZ = glGetAttribLocation(program, "xyz");
+	attribUV = glGetAttribLocation(program, "uv");
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	return 0;
+}
+
+void _TobyG_DestroyMeshBatch(void) {
+	glDeleteProgram(program);
+}
+
+void TobyG_StartMeshBatchRendering(void) {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	glUseProgram(program);
+
+	glUniform1i(uniformTex, 0);
+
+	glEnableVertexAttribArray(attribXYZ);
+	glEnableVertexAttribArray(attribUV);
+}
+
+void TobyG_EndMeshBatchRendering(void) {
+	glDisableVertexAttribArray(attribUV);
+	glDisableVertexAttribArray(attribXYZ);
+}
 
 TobyG_MeshBatch* TobyG_ReadMeshBatch(const char* path) {
 	TobyG_MeshBatch* batch;
@@ -159,14 +234,11 @@ int TobyG_SetMeshBatch(TobyG_MeshBatch* batch) {
 }
 
 int TobyG_DrawMeshBatchAt(TobyG_Instance* instance, size_t index) {
-	GLint uniformMVP;
-	GLint attribXYZ, attribUV;
 	GLfloat* matrixVP;
 	GLfloat* matrixM;
 	GLfloat matrixMVP[16];
 
-	if (NULL == instance || NULL == currentBatch || index >= currentBatch->elementCount
-			|| _TobyG_GetCurrentMeshBatchRendererGLSLInfo(&uniformMVP, &attribXYZ, &attribUV)) {
+	if (NULL == instance || NULL == currentBatch || index >= currentBatch->elementCount) {
 		return -1;
 	}
 
