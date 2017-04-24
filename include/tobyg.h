@@ -21,5 +21,6 @@
 
 #include "tobyg_io_file.h"
 #include "tobyg_io_path.h"
+#include "tobyg_io_util.h"
 
 #endif /* TOBYG_INCLUDE_TOBYG_H */

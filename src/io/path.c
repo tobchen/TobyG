@@ -10,9 +10,9 @@
 #include <SDL2/SDL.h>
 
 #ifdef _WIN32
-	#define COMMON_TOBCHEN_PATH_SEPARATOR '\\'
+	#define TOBYG_PATH_SEPARATOR '\\'
 #else
-	#define COMMON_TOBCHEN_PATH_SEPARATOR '/'
+	#define TOBYG_PATH_SEPARATOR '/'
 #endif
 
 static char* basepath;
@@ -44,7 +44,7 @@ void TobyG_EndPath(void) {
 	free(basepath);
 }
 
-char* TobyG_GetPath(const char* directory, const char* name,
+char* TobyG_GetPathByDirNameExt(const char* directory, const char* name,
 		const char* extension) {
 	size_t dirlen, namelen, extlen;
 	char* merged;
@@ -62,11 +62,34 @@ char* TobyG_GetPath(const char* directory, const char* name,
 	}
 	memcpy(merged, basepath, baselength);
 	memcpy(merged+baselength, directory, dirlen);
-	merged[baselength+dirlen] = COMMON_TOBCHEN_PATH_SEPARATOR;
+	merged[baselength+dirlen] = TOBYG_PATH_SEPARATOR;
 	memcpy(merged+baselength+dirlen+1, name, namelen);
 	merged[baselength+dirlen+namelen+1] = '.';
 	memcpy(merged+baselength+dirlen+namelen+2, extension, extlen);
 	merged[baselength+dirlen+namelen+extlen+2] = 0;
+
+	return merged;
+}
+
+char* TobyG_GetPathByDirFile(const char* directory, const char* file) {
+	size_t dirlen, filelen;
+	char* merged;
+
+	if (NULL == directory || NULL == file) {
+		return NULL;
+	}
+
+	dirlen = strlen(directory);
+	filelen = strlen(file);
+	merged = malloc(sizeof(char) * (baselength + dirlen + filelen + 2));
+	if (NULL == merged) {
+		return NULL;
+	}
+	memcpy(merged, basepath, baselength);
+	memcpy(merged+baselength, directory, dirlen);
+	merged[baselength+dirlen] = TOBYG_PATH_SEPARATOR;
+	memcpy(merged+baselength+dirlen+1, file, filelen);
+	merged[baselength+dirlen+filelen+1] = 0;
 
 	return merged;
 }

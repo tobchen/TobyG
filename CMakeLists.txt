@@ -7,6 +7,7 @@ set(CMAKE_C_FLAGS "-g -Wall -Wextra -Werror -ansi -pedantic -pedantic-errors")
 add_library(tobyg SHARED
     src/io/file.c
     src/io/path.c
+    src/io/util.c
     src/game/gamemgr.c
     src/gfx/gfx.c
     src/gfx/mesh.c

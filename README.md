@@ -203,14 +203,17 @@ Oh my, I have no idea where to begin, but most likely:
 
 ## Version History
 
-### v0
+### v0.2
+TobyG's now exclusively low res, every wriggle room in that direction was removed. IO was developed further.
+#### Added
+- Path building functions
+- File content reading functions
+#### Changed
+- Virtual resolution now mandatory (always set to 256x224)
+#### Removed
+- Mesh renderer flexibility (only retro rendering now)
+- Mesh batch renderer flexibility (only retro rendering now)
 
-#### v0.1
+### v0.1
+TobyG went public. I held a big party. No one came.
 
-- TobyG went public
-
-#### v0.2
-
-- Virtual resolution now mandatory, always set to 256x224
-- Mesh renderer flexibility removed (only retro rendering now)
-- Mesh batch renderer flexibility removed (only retro rendering now)

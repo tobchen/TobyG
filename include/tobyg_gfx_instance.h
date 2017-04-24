@@ -16,7 +16,7 @@ typedef struct tobyg_instance TobyG_Instance;
  * \brief Create a 3D instance to be used for mesh (batch) rendering.
  * @return instance
  */
-TobyG_Instance* TobyG_CreateInstance();
+TobyG_Instance* TobyG_CreateInstance(void);
 
 /*!
  * \brief Free an instance.

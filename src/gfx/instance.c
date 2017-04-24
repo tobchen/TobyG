@@ -22,7 +22,7 @@ struct tobyg_instance {
 	GLfloat matrix[16];
 };
 
-TobyG_Instance* TobyG_CreateInstance() {
+TobyG_Instance* TobyG_CreateInstance(void) {
 	TobyG_Instance* result = malloc(sizeof(TobyG_Instance));
 	if (NULL == result) {
 		return NULL;
