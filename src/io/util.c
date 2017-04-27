@@ -77,7 +77,6 @@ char* TobyG_ReadSmallString(SDL_RWops* file) {
 		return NULL;
 	}
 	result[length] = 0;
-	SDL_Log("%s\n", result);
 
 	return result;
 }
