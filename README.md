@@ -12,6 +12,10 @@ My goal was to have a very low level library with just the minimum amount of abs
 
 **IMPORTANT:** TobyG is still in development and nothing's set in stone yet. Also, a ton of errors aren't being checked for.
 
+## Requirements
+
+TobyG needs SDL2, GLEW and WebP. It needs OpenGL 2.1 or higher to run (but will most likely try to run anyway and fail).
+
 ## Usage
 
 The smallest TobyG program would be:
@@ -155,10 +159,6 @@ TobyG provides some help with files and paths.
 #### Paths
 
 In development, very much subject to change.
-
-## Requirements
-
-TobyG needs SDL2, GLEW and WebP to compile. It needs OpenGL 2.1 or higher to run.
 
 ## To Do
 

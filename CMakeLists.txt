@@ -17,4 +17,4 @@ add_library(tobyg SHARED
     src/gfx/camera.c
     src/gfx/texture.c
     src/gfx/math.c)
-target_link_libraries(tobyg SDL2 GLEW webp)
+target_link_libraries(tobyg)
